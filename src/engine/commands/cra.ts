@@ -19,6 +19,9 @@ import { buildTemplateIconsRouter } from '../templates/IconsRoutertemplate';
 import { buildCreateViewTemplate } from '../templates/CreateViewTemplate';
 import { buildUpdateViewTemplate } from '../templates/UpdateViewTemplate';
 import { buildDetailsViewTemplate } from '../templates/DetailsViewTemplate';
+import { API_HOST } from '../../consts/Environment';
+import { ENVIRONMENT_NAME } from '../../consts/Environment';
+import { WORKSPACE_ID } from '../../consts/Environment';
 
 type AppParams = {
   _: string[];
@@ -35,18 +38,29 @@ export default {
       throw new Error(context.i18n.t('logout_error'));
     }
     const git = simplegit('.');
+    context.updateWorkspace({
+      apiHost: API_HOST,
+      environmentName: ENVIRONMENT_NAME,
+      workspaceId: WORKSPACE_ID,
+    });
     const { appName, _ } = params;
     const commonFields = ['Created By', 'ID', 'Created At', 'Updated At'];
     const appRoute = `./${appName}`;
-    const selectedTables = _;
+    const selectedTables = _.map((t) => t.toLowerCase());
     selectedTables.splice(0, 1);
+
+    if (!selectedTables.length) {
+      throw new Error('Select at least one table');
+    }
 
     const tables: TableSchema[] = (
       await exportTables(context.request.bind(context), {
         withSystemTables: true,
       })
     ).filter(
-      (table) => !table.isSystem && selectedTables.includes(table.displayName),
+      (table) =>
+        !table.isSystem &&
+        selectedTables.includes(table.displayName.toLowerCase()),
     );
 
     // const workspaceId = context.workspaceId;
@@ -72,7 +86,10 @@ export default {
       const filteredFields = tables[i].fields.filter(
         (f) => !commonFields.includes(f.displayName),
       );
-      const fieldsNames = filteredFields.map((field) => field.displayName);
+      const fieldsNames =
+        filteredFields.length >= 7
+          ? filteredFields.map((field) => field.displayName).slice(0, 6)
+          : filteredFields.map((field) => field.displayName);
       const moduleNameMayus =
         tableName.charAt(0).toUpperCase() + tableName.slice(1);
 

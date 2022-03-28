@@ -106,7 +106,7 @@ export const mapTextFieldsDetails = (fields: string[]) => {
 
   fields.forEach((field) => {
     textFields += `
-    <Grid item md={3}>
+    <Grid item md={5}>
       <Box display="flex" justifyContent="center" flexDirection="column">
         <Box display="flex" textAlign="center" justifyContent="center">
           <Title>${field}</Title>

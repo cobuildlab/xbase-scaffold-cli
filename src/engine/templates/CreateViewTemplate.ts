@@ -28,7 +28,7 @@ export const buildCreateViewTemplate = (
         return (
           <Card>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" mb="30px">
+              <Box display="flex" justifyContent="space-between" mb="15px">
                 <Box
                   display="flex"
                   justifyContent="space-between"
@@ -42,16 +42,25 @@ export const buildCreateViewTemplate = (
                     Back
                   </Typography>
                 </Box>
+
+                <Button
+                  sx={{ background: PRIMARY, float: 'right', margin: '20px' }}
+                  variant="contained">
+                  Create
+                </Button>
               </Box>
+
+            <Box
+              sx={{
+              width: '100%',
+              borderBottom: '0.5px solid #C4C4C4',
+              marginBottom: '20px',
+              }}
+            />
       
               <Grid container spacing={1}>
                 ${textfields}
               </Grid>
-              <Button
-                sx={{ background: PRIMARY, float: 'right', margin: '20px' }}
-                variant="contained">
-                Save
-              </Button>
             </CardContent>
           </Card>
         );

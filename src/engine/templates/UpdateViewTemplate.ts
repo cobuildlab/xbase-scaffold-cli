@@ -42,16 +42,26 @@ export const buildUpdateViewTemplate = (
                     Back
                   </Typography>
                 </Box>
+
+                <Button
+                  sx={{ background: PRIMARY, float: 'right', margin: '20px' }}
+                  variant="contained">
+                  Update
+                </Button>
               </Box>
+
+              <Box
+                sx={{
+                  width: '100%',
+                  borderBottom: '0.5px solid #C4C4C4',
+                  marginBottom: '20px',
+                }}
+              />
       
               <Grid container spacing={1}>
                 ${textfields}
               </Grid>
-              <Button
-                sx={{ background: PRIMARY, float: 'right', margin: '20px' }}
-                variant="contained">
-                Update
-              </Button>
+              
             </CardContent>
           </Card>
         );
