@@ -27,7 +27,7 @@ export const buildDetailsViewTemplate = (
         return (
           <Card>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" mb="30px">
+              <Box display="flex" justifyContent="space-between" mb="15px">
                 <Box
                   display="flex"
                   justifyContent="space-between"
@@ -48,6 +48,14 @@ export const buildDetailsViewTemplate = (
                   Edit
                 </Button>
               </Box>
+
+              <Box
+                sx={{
+                  width: '100%',
+                  borderBottom: '0.5px solid #C4C4C4',
+                  marginBottom: '20px',
+                }}
+              />
       
               <Grid container spacing={3}>
                 ${textfields}
