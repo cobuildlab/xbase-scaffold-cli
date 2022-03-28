@@ -41,7 +41,7 @@ export const mapImportRoutes = (moduleNames: string[]): string => {
 
 export const mapTableRows = (fields: string[], title: boolean) => {
   let rows = '';
-  fields.forEach((field, i: number) => {
+  fields.forEach((field) => {
     if (title) {
       rows += `<StyledTableCell>${field}</StyledTableCell> \n`;
     } else {
