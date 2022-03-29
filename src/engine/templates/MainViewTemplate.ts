@@ -16,7 +16,6 @@ export const buildTemplateMainView = (
           TableRow,
         } from '@mui/material';
         import AddIcon from '@mui/icons-material/Add';
-        import { Box } from '@mui/system';
         import React, { useState } from 'react';
         import {
           DefaultRowSize,
@@ -35,6 +34,7 @@ export const buildTemplateMainView = (
           card: {
             background: '#fff',
             borderRadius: '8px',
+            padding: '10px',
           },
         }));
         /**
@@ -50,7 +50,6 @@ export const buildTemplateMainView = (
           });
           return (
             <>
-              <Box padding="0px 50px">
                 <Card className={classes.card}>
                   <CardContent>
                     <Grid container spacing={1}>
@@ -113,7 +112,6 @@ export const buildTemplateMainView = (
                     </Grid>
                   </CardContent>
                 </Card>
-              </Box>
             </>
           );
         };

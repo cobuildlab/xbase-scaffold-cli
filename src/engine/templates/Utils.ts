@@ -56,47 +56,34 @@ export const mapTextFields = (fields: FieldSchema[]) => {
   fields.forEach((field) => {
     if (field.fieldType === FIELD_TYPE.DATE)
       textFields += `
-    <Grid item md={1} />
-    <Grid item md={4}>
-      <Box display="flex" justifyContent="center" flexDirection="column">
-        <Box display="flex" textAlign="center" justifyContent="center">
-          <Title>${field.displayName}</Title>
-        </Box>
-        <Box display="flex" justifyContent="center">
-          <CustomInput type='date' style={{ width: '250px', margin: '10px 0px' }} />
-        </Box>
-      </Box>
-    </Grid>
-    <Grid item md={1} /> \n`;
+      <Grid item md={12}>
+      <Title>${field.displayName}</Title>
+      <CustomInput
+        fullWidth
+        type="date"
+        style={{ margin: '10px 0px' }}
+      />
+    </Grid> \n`;
 
     if (field.fieldType === FIELD_TYPE.NUMBER)
       textFields += `
-    <Grid item md={1} />
-    <Grid item md={4}>
-      <Box display="flex" justifyContent="center" flexDirection="column">
-        <Box display="flex" textAlign="center" justifyContent="center">
-          <Title>${field.displayName}</Title>
-        </Box>
-        <Box display="flex" justifyContent="center">
-          <CustomInput type='number' style={{ width: '250px', margin: '10px 0px' }} />
-        </Box>
-      </Box>
-    </Grid>
-    <Grid item md={1} /> \n`;
+      <Grid item md={12}>
+      <Title>${field.displayName}</Title>
+      <CustomInput
+        fullWidth
+        type="number"
+        style={{ margin: '10px 0px' }}
+      />
+    </Grid> \n`;
 
     textFields += `
-    <Grid item md={1} />
-    <Grid item md={4}>
-      <Box display="flex" justifyContent="center" flexDirection="column">
-        <Box display="flex" textAlign="center" justifyContent="center">
-          <Title>${field.displayName}</Title>
-        </Box>
-        <Box display="flex" justifyContent="center">
-          <CustomInput style={{ width: '250px', margin: '10px 0px' }} />
-        </Box>
-      </Box>
-    </Grid>
-    <Grid item md={1} /> \n`;
+      <Grid item md={12}>
+      <Title>${field.displayName}</Title>
+      <CustomInput
+        fullWidth
+        style={{ margin: '10px 0px' }}
+      />
+    </Grid> \n`;
   });
   return textFields;
 };
@@ -106,13 +93,9 @@ export const mapTextFieldsDetails = (fields: string[]) => {
 
   fields.forEach((field) => {
     textFields += `
-    <Grid item md={5}>
-      <Box display="flex" justifyContent="center" flexDirection="column">
-        <Box display="flex" textAlign="center" justifyContent="center">
-          <Title>${field}</Title>
-        </Box>
-        <Box textAlign="center">Data</Box>
-      </Box>
+    <Grid item md={6}>
+      <Title>${field}</Title>
+      <Typography>Data</Typography>
     </Grid> \n `;
   });
 
