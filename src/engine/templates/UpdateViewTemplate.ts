@@ -15,6 +15,7 @@ export const buildUpdateViewTemplate = (
       import { useNavigate } from 'react-router-dom';
       import { Box } from '@mui/system';
       import React from 'react';
+      import truckImg from '../../../shared/assets/images/bro.png';
       import { PRIMARY } from '../../../shared/css/theme';
       import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
       import { CustomInput } from '../../../shared/components/inputs/CustomInput';
@@ -57,11 +58,36 @@ export const buildUpdateViewTemplate = (
                   marginBottom: '20px',
                 }}
               />
-      
-              <Grid container spacing={1}>
-                ${textfields}
-              </Grid>
-              
+              <Grid container spacing={2}>
+                  {/* left side image */}
+                  <Grid item md={6}>
+                    <img
+                      src={truckImg}
+                      alt="Truck img"
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                      }}
+                    />
+                  </Grid>
+                  {/* Right side, form */}
+                  <Grid item md={6}>
+                    <Box padding="20px">
+                      <Grid container spacing={2}>
+                        ${textfields}
+                        <Grid item md={12}>
+                          <Title>inspectionReportNumber</Title>
+                          <CustomInput
+                            label="label"
+                            fullWidth
+                            style={{ margin: '10px 0px' }}
+                          />
+                        </Grid>
+
+                      </Grid>
+                    </Box>
+                  </Grid>
+                </Grid>
             </CardContent>
           </Card>
         );

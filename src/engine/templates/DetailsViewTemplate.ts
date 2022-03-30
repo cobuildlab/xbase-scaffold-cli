@@ -14,6 +14,7 @@ export const buildDetailsViewTemplate = (
       import { useNavigate } from 'react-router-dom';
       import { Box } from '@mui/system';
       import React from 'react';
+      import truckImg from '../../../shared/assets/images/bro.png';
       import { PRIMARY } from '../../../shared/css/theme';
       import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
       import { Title } from '../../../shared/components/typography/Titles';
@@ -25,6 +26,7 @@ export const buildDetailsViewTemplate = (
       export const ${moduleName}DetailsView: React.FC = () => {
         const navigate = useNavigate();
         return (
+        <Box padding="40px">  
           <Card>
             <CardContent>
               <Box display="flex" justifyContent="space-between" mb="15px">
@@ -56,12 +58,30 @@ export const buildDetailsViewTemplate = (
                   marginBottom: '20px',
                 }}
               />
-      
-              <Grid container spacing={3}>
-                ${textfields}
+              <Grid container spacing={2}>
+              {/* left side image */}
+                <Grid item md={6}>
+                  <img
+                    src={truckImg}
+                    alt="Truck img"
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                    }}
+                  />
+                </Grid>
+
+                <Grid item md={6}>
+                  <Box padding="20px">
+                    <Grid container spacing={5}>
+                      ${textfields}
+                    </Grid>
+                  </Box>
+                </Grid>
               </Grid>
             </CardContent>
           </Card>
+        </Box>
         );
       };
     `;
