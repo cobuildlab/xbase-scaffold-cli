@@ -1,10 +1,8 @@
+/* eslint-disable import/no-default-export */
 import * as yargs from 'yargs';
-import * as fs from 'fs-extra';
-import * as yaml from 'js-yaml';
 import { Context } from '../../common/context';
 import { translations } from '../../common/translations';
-import { Interactive } from '../../common/interactive';
-import { writeFs } from '../../common/memfs';
+import { ask } from '../../common/interactive';
 import { createQueryColumnsList, TableSchema } from '@8base/utils';
 import { exportTables } from '@8base/api-client';
 
@@ -25,11 +23,16 @@ type EightBaseConfig = {
   appName: string;
 };
 
+/**
+ * @param {string[]} columns - Columns.
+ * @param {string} message - Message.
+ * @returns {string[]} - String.
+ */
 const promptColumns = async (
   columns: string[],
   message: string,
 ): Promise<string[]> => {
-  const result = await Interactive.ask({
+  const result = await ask({
     name: 'columns',
     type: 'multiselect',
     message: message,
@@ -44,6 +47,11 @@ const promptColumns = async (
   return result.columns;
 };
 
+/**
+ * @param {TableSchema[]} tables - Tables.
+ * @param {string} tableName - TableName.
+ * @returns {TableSchema} - TableSchema.
+ */
 const getTable = (tables: TableSchema[], tableName: string): TableSchema => {
   const table = tables.find(
     ({ name, displayName }) =>
@@ -77,38 +85,6 @@ const getColumnsNames = (
   return columnsNames;
 };
 
-const createTemplateFs = async (
-  tables: TableSchema[],
-  screen: Screen,
-  config: { depth: number },
-  context: Context,
-) => {
-  const rootFile = await fs.readFile('src/Root.js', 'utf8');
-
-  /*  const fsObject = generateScreen(
-        {
-            tablesList: tables,
-            screen,
-            rootFile,
-        },
-        {deep: config.depth},
-    );
-
-    try {
-        if (fs.existsSync(Object.keys(fsObject)[0])) {
-            throw new Error(translations.i18n.t('generate_scaffold_crud_exist_error'));
-        }
-
-        await writeFs(fsObject);
-
-        Object.keys(fsObject).forEach(filePath => context.logger.info(filePath));
-        context.logger.info(context.i18n.t('generate_scaffold_successfully_created', {screenName: screen.screenName}));
-    } catch (err) {
-        context.logger.error(err);
-        context.logger.error(context.i18n.t('generate_scaffold_was_not_created', {screenName: screen.screenName}));
-    } */
-};
-
 export default {
   command: 'scaffold [tableName]',
   describe: translations.i18n.t('generate_scaffold_describe'),
@@ -119,7 +95,6 @@ export default {
         withSystemTables: true,
       })
     ).filter((table) => !table.isSystem);
-    console.log('DAtaa', tables);
     // List tables
     if (!params.tableName) {
       context.spinner.stop();
@@ -162,9 +137,12 @@ export default {
     const generatorConfig = {
       depth: params.depth,
     };
-
-    await createTemplateFs(tables, generatorScreen, generatorConfig, context);
+    console.log(generatorScreen, generatorConfig);
   },
+  /**
+   * @param {yargs.Argv} args - Args.
+   * @returns {yargs.Argv} - Yargs.
+   */
   builder: (args: yargs.Argv): yargs.Argv => {
     return args
       .usage(translations.i18n.t('generate_scaffold_usage'))

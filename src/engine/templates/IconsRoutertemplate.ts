@@ -1,5 +1,9 @@
-export const buildTemplateIconsRouter = (modules: string[]) => {
-    return `
+/**
+ * @param {string[]} modules - Module names for Sidebar.
+ * @returns {string} - Template.
+ */
+export const buildTemplateIconsRouter = (modules: string[]): string => {
+  return `
   
   /* eslint-disable @typescript-eslint/no-unused-vars */
   import * as React from 'react';
@@ -162,4 +166,4 @@ export const buildTemplateIconsRouter = (modules: string[]) => {
     );
   };
   `;
-  };
+};

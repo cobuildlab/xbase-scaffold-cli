@@ -1,7 +1,11 @@
 import { Context } from './context';
 
 export class ProjectConfigurationState {
-  public static expectConfigured(context: Context) {
+  /**
+   * @param {Context} context - Context.
+   * @returns {void}
+   */
+  public static expectConfigured(context: Context): void {
     if (
       !context.hasWorkspaceConfig() ||
       !context.workspaceConfig.workspaceId ||
@@ -11,7 +15,11 @@ export class ProjectConfigurationState {
     }
   }
 
-  public static expectHasProject(context: Context) {
+  /**
+   * @param {Context} context - Context.
+   * @returns {void}
+   */
+  public static expectHasProject(context: Context): void {
     ProjectConfigurationState.expectConfigured(context);
     if (!context.hasProjectConfig()) {
       throw new Error(context.i18n.t('you_are_not_in_project'));

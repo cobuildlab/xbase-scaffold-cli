@@ -1,9 +1,13 @@
+/**
+ * @param {string} moduleName - Module name for the file and title.
+ * @param {string} textfields - Text fields from the table.
+ * @returns {string} - Template.
+ */
 export const buildCreateViewTemplate = (
-    moduleName: string,
-    textfields: string,
-) => {
-
-    return `
+  moduleName: string,
+  textfields: string,
+): string => {
+  return `
     import {
         Button,
         Card,
@@ -86,4 +90,4 @@ export const buildCreateViewTemplate = (
         );
       };
     `;
-}
+};

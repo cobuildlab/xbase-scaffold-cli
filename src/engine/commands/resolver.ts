@@ -1,3 +1,4 @@
+/* eslint-disable import/no-default-export */
 import * as yargs from 'yargs';
 
 import { Context } from '../../common/context';
@@ -14,9 +15,8 @@ type ResolverParams = {
 
 export default {
   command: 'resolver <name>',
-
   handler: async (params: ResolverParams, context: Context) => {
-    let { name, mocks, syntax, silent } = params;
+    const { name, mocks, syntax, silent } = params;
 
     ProjectController.generateFunction(context, {
       type: ExtensionType.resolver,
@@ -29,7 +29,10 @@ export default {
   },
 
   describe: translations.i18n.t('generate_resolver_describe'),
-
+  /**
+   * @param {yargs.Argv} args - Args.
+   * @returns {yargs.Argv} - Yargs.
+   */
   builder: (args: yargs.Argv): yargs.Argv =>
     args
       .usage(translations.i18n.t('generate_resolver_usage'))

@@ -109,7 +109,9 @@ export const GraphqlActions = {
   fragment FunctionTaskInfo on FunctionTaskInfo {
     scheduleExpression
   }`,
-  environmentDelete: `mutation delete($name:String!) { system { environmentDelete(environmentName:$name) { success } } }`,
+  environmentDelete: `
+  mutation delete($name:String!) { system { environmentDelete(environmentName:$name) { success } } }
+  `,
 };
 
 export const GraphqlAsyncActions = {

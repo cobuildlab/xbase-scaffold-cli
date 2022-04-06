@@ -1,6 +1,6 @@
-import * as yargs from 'yargs';
+/* eslint-disable import/no-default-export */
+import { Argv } from 'yargs';
 import * as fs from 'fs-extra';
-import * as path from 'path';
 import * as simplegit from 'simple-git/promise';
 import { translations } from '../../common/translations';
 import { Context } from '../../common/context';
@@ -31,7 +31,11 @@ type AppParams = {
 export default {
   command: 'cra <appName>',
   describe: translations.i18n.t('generate_app_describe'),
-  builder: (yargs: yargs.Argv): yargs.Argv =>
+  /**
+   * @param {yargs} yargs - Yargs.
+   * @returns {Argv} - Yargs.
+   */
+  builder: (yargs: Argv): Argv =>
     yargs.usage(translations.i18n.t('generate_app_usage')),
   handler: async (params: AppParams, context: Context) => {
     if (!context.user.isAuthorized()) {

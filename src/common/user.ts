@@ -2,15 +2,13 @@ import * as _ from 'lodash';
 import { UserDataStorage } from './userDataStorage';
 import { StorageParameters } from '../consts/StorageParameters';
 
-type Workspace = {
-  name: string;
-  id: string;
-};
-
 export class User {
   private static storage = UserDataStorage;
 
-  static isAuthorized() {
+  /**
+   * @returns {boolean} - Boolean.
+   */
+  static isAuthorized(): boolean {
     const idToken = this.storage.getValue(StorageParameters.idToken);
 
     return !_.isEmpty(idToken);

@@ -1,5 +1,10 @@
-export const buildTemplateRouter = (importRoutes: string, routes: string) => {
-    return `import React from 'react';
+/**
+ * @param {string} importRoutes - Import routes for every component.
+ * @param {string} routes - Routes for the router.
+ * @returns {string} - Template.
+ */
+export const buildTemplateRouter = (importRoutes: string, routes: string): string => {
+  return `import React from 'react';
         import { Routes as RoutesComponent, Route } from 'react-router-dom';
         import { ApolloProvider } from '@apollo/client';
         import { Auth } from './modules/auth/Auth';
@@ -49,4 +54,4 @@ export const buildTemplateRouter = (importRoutes: string, routes: string) => {
           );
         };
         `;
-  };
+};
