@@ -164,11 +164,6 @@ export const archiveToMemory = async (
   });
 };
 
-/**
- * @param {workspace[]} workspaces - Workspaces.
- * @param {Context} context - Context.
- * @returns {{ id: string }} - Readable.
- */
 export const promptWorkspace = async (
   workspaces: workspace[],
   context: Context,

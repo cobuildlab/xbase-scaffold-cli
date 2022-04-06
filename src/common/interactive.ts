@@ -10,10 +10,6 @@ export type InteractiveInput = {
   type: 'select' | 'password' | 'text' | 'multiselect' | 'confirm';
 };
 
-/**
- * @param {InteractiveInput} options - Options.
- * @returns {any} - Any.
- */
 export const ask = (options: InteractiveInput): Promise<any> => {
   return prompts(options);
 };

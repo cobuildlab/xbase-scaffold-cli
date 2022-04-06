@@ -14,13 +14,6 @@ type variablesType = {
   [key: string]: any;
 };
 
-/**
- * @param {Context} context - Context.
- * @param {GraphqlAsyncActionsType} query - Query.
- * @param {variablesType} variables - Variables.
- * @param {RequestOptions} options - Options.
- * @returns {void}
- */
 export const executeAsync = async (
   context: Context,
   query: GraphqlAsyncActionsType,

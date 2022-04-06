@@ -92,9 +92,6 @@ export class Context {
     });
   }
 
-  /**
-   * @returns {WorkspaceConfig | null} - Workspace.
-   */
   get workspaceConfig(): WorkspaceConfig | null {
     const workspaceConfigPath = this.getWorkspaceConfigPath();
 
@@ -125,10 +122,6 @@ export class Context {
     return environments;
   }
 
-  /**
-   * @param {WorkspaceConfig} value - Value.
-   * @returns {void}
-   */
   set workspaceConfig(value: WorkspaceConfig) {
     const workspaceConfigPath = this.getWorkspaceConfigPath();
     fs.writeFileSync(workspaceConfigPath, JSON.stringify(value, null, 2));
@@ -142,30 +135,17 @@ export class Context {
     return path.join(customPath || process.cwd(), WORKSPACE_CONFIG_FILENAME);
   }
 
-  /**
-   * @param {WorkspaceConfig} value - Value.
-   * @returns {void}
-   */
   updateWorkspace(value: WorkspaceConfig): void {
     const currentWorkspaceConfig = this.workspaceConfig;
     this.workspaceConfig = _.merge(currentWorkspaceConfig, value);
   }
 
-  /**
-   * @param {string} environmentName - Value.
-   * @returns {void}
-   */
   updateEnvironmentName(environmentName: string): void {
     const currentWorkspaceConfig = this.workspaceConfig;
 
     this.workspaceConfig = _.merge(currentWorkspaceConfig, { environmentName });
   }
 
-  /**
-   * @param {WorkspaceConfig} value - Value.
-   * @param {string} customPath - Value.
-   * @returns {void}
-   */
   createWorkspaceConfig(value: WorkspaceConfig, customPath?: string): void {
     const workspaceConfigPath = this.getWorkspaceConfigPath(customPath);
 
@@ -217,9 +197,6 @@ export class Context {
     return this.hasWorkspaceConfig();
   }
 
-  /**
-   * @returns {ProjectConfig} - WorkspaceId.
-   */
   get projectConfig(): ProjectConfig {
     const projectConfigPath = this.getProjectConfigPath();
 
@@ -233,10 +210,6 @@ export class Context {
     return projectConfig;
   }
 
-  /**
-   * @param {ProjectConfig} value - Value.
-   * @returns {void}
-   */
   set projectConfig(value: ProjectConfig) {
     const projectConfigPath = this.getProjectConfigPath();
 

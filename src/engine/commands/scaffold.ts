@@ -68,11 +68,6 @@ const getTable = (tables: TableSchema[], tableName: string): TableSchema => {
   return table;
 };
 
-/**
- * @param {{ withMeta: boolean } & ViewCommandConfig} params - Params.
- * @param {TableSchema[]} tables - TableSchema.
- * @returns {string[]} - Column names.
- */
 const getColumnsNames = (
   params: { withMeta: boolean } & ViewCommandConfig,
   tables: TableSchema[],
@@ -93,11 +88,6 @@ const getColumnsNames = (
 export default {
   command: 'scaffold [tableName]',
   describe: translations.i18n.t('generate_scaffold_describe'),
-  /**
-   * @param {ResolverParams} params - Params.
-   * @param {Context} context - Context.
-   * @returns {void}
-   */
   handler: async (params: ViewCommandConfig, context: Context) => {
     context.spinner.start('Fetching table data');
     const tables: TableSchema[] = (

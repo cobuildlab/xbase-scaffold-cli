@@ -20,11 +20,6 @@ type TiggerParams = {
 
 export default {
   command: 'trigger <name>',
-  /**
-   * @param {TiggerParams} params - Params.
-   * @param {Context} context - Context.
-   * @returns {void}
-   */
   handler: async (params: TiggerParams, context: Context) => {
     const { name, type, operation, mocks, syntax, silent } = params;
 

@@ -37,11 +37,6 @@ export default {
    */
   builder: (yargs: Argv): Argv =>
     yargs.usage(translations.i18n.t('generate_app_usage')),
-  /**
-   * @param {AppParams} params - Params.
-   * @param {Context} context - Context.
-   * @returns {void}
-   */
   handler: async (params: AppParams, context: Context) => {
     if (!context.user.isAuthorized()) {
       throw new Error(context.i18n.t('logout_error'));

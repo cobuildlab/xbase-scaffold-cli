@@ -278,12 +278,6 @@ namespace ResolverUtils {
   };
 }
 
-/**
- * @param {FunctionGeneratationOptions} params - Params.
- * @param {string} dirPath - DirPath.
- * @param {FunctionDeclarationOptions} options - Options.
- * @returns {DeclarationType} - Declaration.
- */
 const generateFunctionDeclaration = (
   params: FunctionGeneratationOptions,
   dirPath: string,

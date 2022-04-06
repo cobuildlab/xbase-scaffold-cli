@@ -17,11 +17,6 @@ type TaskParams = {
 
 export default {
   command: 'webhook <name>',
-  /**
-   * @param {TaskParams} params - Params.
-   * @param {Context} context - Context.
-   * @returns {void}
-   */
   handler: async (params: TaskParams, context: Context) => {
     const { name, path, method, mocks, syntax, silent } = params;
 

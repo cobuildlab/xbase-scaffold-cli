@@ -15,11 +15,6 @@ type ResolverParams = {
 
 export default {
   command: 'resolver <name>',
-  /**
-   * @param {ResolverParams} params - Params.
-   * @param {Context} context - Context.
-   * @returns {void}
-   */
   handler: async (params: ResolverParams, context: Context) => {
     const { name, mocks, syntax, silent } = params;
 

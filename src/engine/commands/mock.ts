@@ -13,11 +13,6 @@ type ResolverParams = {
 // eslint-disable-next-line import/no-default-export
 export default {
   command: 'mock <name>',
-  /**
-   * @param {ResolverParams} params - Params.
-   * @param {Context} context - Context.
-   * @returns {void}
-   */
   handler: async (params: ResolverParams, context: Context) => {
     const { name, mockName, silent } = params;
 
