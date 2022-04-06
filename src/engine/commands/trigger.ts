@@ -1,8 +1,12 @@
+/* eslint-disable import/no-default-export */
 import * as yargs from 'yargs';
-
 import { Context } from '../../common/context';
 import { translations } from '../../common/translations';
-import { ExtensionType, SyntaxType, TriggerOperation, TriggerType } from '../../interfaces/Extensions';
+import {
+  ExtensionType,
+  SyntaxType,
+  TriggerType,
+} from '../../interfaces/Extensions';
 import { ProjectController } from '../controllers/projectController';
 
 type TiggerParams = {
@@ -16,12 +20,18 @@ type TiggerParams = {
 
 export default {
   command: 'trigger <name>',
-
+  /**
+   * @param {TiggerParams} params - Params.
+   * @param {Context} context - Context.
+   * @returns {void}
+   */
   handler: async (params: TiggerParams, context: Context) => {
-    let { name, type, operation, mocks, syntax, silent } = params;
+    const { name, type, operation, mocks, syntax, silent } = params;
 
     if (operation && !/[\w\d]+\.(create|update|delete)/.test(operation)) {
-      throw new Error(translations.i18n.t('generate_trigger_invalid_operation'));
+      throw new Error(
+        translations.i18n.t('generate_trigger_invalid_operation'),
+      );
     }
 
     ProjectController.generateFunction(
@@ -41,7 +51,10 @@ export default {
   },
 
   describe: translations.i18n.t('generate_trigger_describe'),
-
+  /**
+   * @param {yargs.Argv} args - Args.
+   * @returns {yargs.Argv} - Yargs.
+   */
   builder: (args: yargs.Argv): yargs.Argv =>
     args
       .usage(translations.i18n.t('generate_trigger_usage'))

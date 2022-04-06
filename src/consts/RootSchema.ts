@@ -1,3 +1,6 @@
+/**
+ * @returns {string} - String.
+ */
 export function rootGraphqlSchema(): string {
   return `
   type Query {

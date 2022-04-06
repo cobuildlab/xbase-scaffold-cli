@@ -1,3 +1,4 @@
+/* eslint-disable import/no-default-export */
 import * as yargs from 'yargs';
 
 import { Context } from '../../common/context';
@@ -16,9 +17,13 @@ type TaskParams = {
 
 export default {
   command: 'webhook <name>',
-
+  /**
+   * @param {TaskParams} params - Params.
+   * @param {Context} context - Context.
+   * @returns {void}
+   */
   handler: async (params: TaskParams, context: Context) => {
-    let { name, path, method, mocks, syntax, silent } = params;
+    const { name, path, method, mocks, syntax, silent } = params;
 
     ProjectController.generateFunction(
       context,
@@ -37,7 +42,10 @@ export default {
   },
 
   describe: translations.i18n.t('generate_webhook_describe'),
-
+  /**
+   * @param {yargs.Argv} args - Args.
+   * @returns {yargs.Argv} - Yargs.
+   */
   builder: (args: yargs.Argv): yargs.Argv =>
     args
       .usage(translations.i18n.t('generate_webhook_usage'))

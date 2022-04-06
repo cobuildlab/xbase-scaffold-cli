@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as _ from 'lodash';
 import * as fs from 'fs';
 import { parse, FieldDefinitionNode } from 'graphql';
@@ -8,7 +9,12 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { rootGraphqlSchema } from '../../consts/RootSchema';
 
 export class GraphqlController {
-  static loadSchema(schemaPaths: string[], predefineSchema: string = ''): string {
+  /**
+   * @param {string[]} schemaPaths - Schema Paths.
+   * @param {string} predefineSchema - Predefine Schema.
+   * @returns {any} - Any.
+   */
+  static loadSchema(schemaPaths: string[], predefineSchema = ''): string {
     return _.reduce<string, string>(
       schemaPaths,
       (res: string, file: string): string => {
@@ -20,11 +26,12 @@ export class GraphqlController {
   }
 
   /**
-   *
-   * @param project
-   * @return { functionName: "Query/Mutation" }
+   * @param {string} gqlSchema - GqlSchema.
+   * @returns {any} - Any.
    */
-  static defineGqlFunctionsType(gqlSchema: string): { [functionName: string]: GraphQLFunctionType } {
+  static defineGqlFunctionsType(
+    gqlSchema: string,
+  ): { [functionName: string]: GraphQLFunctionType } {
     // bad solution, I think
     // parse graphql file and get function type for all each function
     if (!gqlSchema) {
@@ -38,8 +45,10 @@ export class GraphqlController {
           case 'ObjectTypeExtension': {
             const extension = data as ObjectTypeExtensionNode;
             const graphqlType = data.name.value;
-            const extendedFieldNames = GraphqlController.processFields(extension.fields);
-            extendedFieldNames.forEach(field => (res[field] = graphqlType));
+            const extendedFieldNames = GraphqlController.processFields(
+              extension.fields,
+            );
+            extendedFieldNames.forEach((field) => (res[field] = graphqlType));
           }
         }
       },
@@ -48,11 +57,9 @@ export class GraphqlController {
   }
 
   /**
-   *
-   * @param project
+   * @param {ProjectDefinition} project - Project.
    */
-
-  static validateSchema(project: ProjectDefinition) {
+  static validateSchema(project: ProjectDefinition): void {
     // TODO: add mutations and queries
     makeExecutableSchema({
       typeDefs: project.gqlSchema + rootGraphqlSchema(),
@@ -64,9 +71,9 @@ export class GraphqlController {
   }
 
   /**
-   * private functions
+   * @param {FieldDefinitionNode[]} fields - Fields.
+   * @returns {string[]} - Fields.
    */
-
   private static processFields(fields: FieldDefinitionNode[]): string[] {
     return _.transform(
       fields,

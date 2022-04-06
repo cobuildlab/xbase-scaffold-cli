@@ -1,3 +1,4 @@
+/* eslint-disable import/no-default-export */
 import * as yargs from 'yargs';
 
 import { Context } from '../../common/context';
@@ -14,9 +15,13 @@ type ResolverParams = {
 
 export default {
   command: 'plugin <name>',
-
+  /**
+   * @param {ResolverParams} params - Params.
+   * @param {Context} context - Context.
+   * @returns {void}
+   */
   handler: async (params: ResolverParams, context: Context) => {
-    let { name, syntax, silent } = params;
+    const { name, syntax } = params;
 
     ProjectController.generatePlugin(context, {
       name,
@@ -25,7 +30,10 @@ export default {
   },
 
   describe: translations.i18n.t('generate_plugin_describe'),
-
+  /**
+   * @param {yargs.Argv} args - Args.
+   * @returns {yargs.Argv} - Yargs.
+   */
   builder: (args: yargs.Argv): yargs.Argv =>
     args
       .usage(translations.i18n.t('generate_plugin_usage'))

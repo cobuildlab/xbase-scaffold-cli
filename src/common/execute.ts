@@ -1,17 +1,32 @@
-import { GraphqlActions, GraphqlAsyncActionsType } from '../consts/GraphqlActions';
-import { Utils } from './utils';
+import {
+  GraphqlActions,
+  GraphqlAsyncActionsType,
+} from '../consts/GraphqlActions';
+import { sleep, upload } from './utils';
 import { AsyncStatus } from '../consts/AsyncStatus';
 import { BuildController } from '../engine/controllers/buildController';
 import { Context } from './context';
 import { DEFAULT_ENVIRONMENT_NAME } from '../consts/Environment';
 import { RequestOptions } from '../interfaces/Common';
 
+type variablesType = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+};
+
+/**
+ * @param {Context} context - Context.
+ * @param {GraphqlAsyncActionsType} query - Query.
+ * @param {variablesType} variables - Variables.
+ * @param {RequestOptions} options - Options.
+ * @returns {void}
+ */
 export const executeAsync = async (
   context: Context,
   query: GraphqlAsyncActionsType,
-  variables: { [key: string]: any } = {},
+  variables: variablesType = {},
   options?: RequestOptions,
-) => {
+): Promise<void> => {
   const {
     system: {
       async: { sessionId },
@@ -29,7 +44,7 @@ export const executeAsync = async (
     ).status;
 
     context.logger.debug(result);
-    await Utils.sleep(2000);
+    await sleep(2000);
     context.spinner.stop();
     context.spinner.start(
       context.i18n.t('async_in_progress', {
@@ -37,7 +52,10 @@ export const executeAsync = async (
         message: result.message,
       }),
     );
-  } while (result.status !== AsyncStatus.completeSuccess && result.status !== AsyncStatus.completeError);
+  } while (
+    result.status !== AsyncStatus.completeSuccess &&
+    result.status !== AsyncStatus.completeError
+  );
 
   context.spinner.stop();
 
@@ -56,29 +74,58 @@ export const executeAsync = async (
   }
 };
 
-export const uploadProject = async (context: Context, options?: RequestOptions): Promise<{ buildName: string }> => {
+/**
+ * @param {Context} context - Context.
+ * @param {RequestOptions} options - Options.
+ * @returns { { buildName: string} } - Build name.
+ */
+export const uploadProject = async (
+  context: Context,
+  options?: RequestOptions,
+): Promise<{ buildName: string }> => {
   const buildDir = await BuildController.package(context);
   context.logger.debug(`build dir: ${buildDir}`);
 
-  const { prepareDeploy } = await context.request(GraphqlActions.prepareDeploy, {}, options);
+  const { prepareDeploy } = await context.request(
+    GraphqlActions.prepareDeploy,
+    {},
+    options,
+  );
 
-  await Utils.upload(prepareDeploy.uploadBuildUrl, buildDir.build, context);
+  await upload(prepareDeploy.uploadBuildUrl, buildDir.build, context);
   context.logger.debug('upload source code complete');
   return { buildName: prepareDeploy.buildName };
 };
 
-export const executeDeploy = async (context: Context, deployOptions: any, options?: RequestOptions) => {
-  context.spinner.start(context.i18n.t('deploy_in_progress', { status: 'prepare to upload' }));
+/**
+ * @param {Context} context - Context.
+ * @param {any} deployOptions - Options.
+ * @param {RequestOptions} options - Options.
+ * @returns {void}
+ */
+export const executeDeploy = async (
+  context: Context,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  deployOptions: any,
+  options?: RequestOptions,
+): Promise<void> => {
+  context.spinner.start(
+    context.i18n.t('deploy_in_progress', { status: 'prepare to upload' }),
+  );
 
   const buildDir = await BuildController.package(context);
   context.logger.debug(`build dir: ${buildDir}`);
 
-  const { prepareDeploy } = await context.request(GraphqlActions.prepareDeploy, null, options);
+  const { prepareDeploy } = await context.request(
+    GraphqlActions.prepareDeploy,
+    null,
+    options,
+  );
 
-  await Utils.upload(prepareDeploy.uploadMetaDataUrl, buildDir.meta, context);
+  await upload(prepareDeploy.uploadMetaDataUrl, buildDir.meta, context);
   context.logger.debug('upload meta data complete');
 
-  await Utils.upload(prepareDeploy.uploadBuildUrl, buildDir.build, context);
+  await upload(prepareDeploy.uploadBuildUrl, buildDir.build, context);
   context.logger.debug('upload source code complete');
 
   await context.request(
@@ -95,7 +142,7 @@ export const executeDeploy = async (context: Context, deployOptions: any, option
       })
     ).deployStatus;
     context.logger.debug(result);
-    await Utils.sleep(2000);
+    await sleep(2000);
     context.spinner.stop();
     context.spinner.start(
       context.i18n.t('deploy_in_progress', {
@@ -103,7 +150,10 @@ export const executeDeploy = async (context: Context, deployOptions: any, option
         message: result.message,
       }),
     );
-  } while (result.status !== AsyncStatus.completeSuccess && result.status !== AsyncStatus.completeError);
+  } while (
+    result.status !== AsyncStatus.completeSuccess &&
+    result.status !== AsyncStatus.completeError
+  );
 
   BuildController.clearBuild(context);
   context.spinner.stop();

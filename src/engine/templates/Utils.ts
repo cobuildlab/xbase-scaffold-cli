@@ -1,5 +1,9 @@
 import { FieldSchema, FIELD_TYPE } from '@8base/utils';
 
+/**
+ * @param {string} moduleNames - Module names for the Routes.
+ * @returns {string} - Template.
+ */
 export const mapRoutes = (moduleNames: string[]): string => {
   let routes = '';
   moduleNames.forEach((module) => {
@@ -26,6 +30,10 @@ export const mapRoutes = (moduleNames: string[]): string => {
   return routes;
 };
 
+/**
+ * @param {string} moduleNames - Module names for the Routes.
+ * @returns {string} - Template.
+ */
 export const mapImportRoutes = (moduleNames: string[]): string => {
   let importRoutes = '';
   moduleNames.forEach((module) => {
@@ -39,19 +47,28 @@ export const mapImportRoutes = (moduleNames: string[]): string => {
   return importRoutes;
 };
 
-export const mapTableRows = (fields: string[], title: boolean) => {
+/**
+ * @param {string} fields - Fields for the table's titles.
+ * @param {boolean} title - Boolean for the map.
+ * @returns {string} - Template.
+ */
+export const mapTableRows = (fields: string[], title: boolean): string => {
   let rows = '';
   fields.forEach((field) => {
     if (title) {
       rows += `<StyledTableCell>${field}</StyledTableCell> \n`;
     } else {
-      rows += `<StyledTableCell>Data</StyledTableCell> \n`;
+      rows += '<StyledTableCell>Data</StyledTableCell> \n';
     }
   });
   return rows;
 };
 
-export const mapTextFields = (fields: FieldSchema[]) => {
+/**
+ * @param {FieldSchema[]} fields - Fields.
+ * @returns {string} - Template.
+ */
+export const mapTextFields = (fields: FieldSchema[]): string => {
   let textFields = '';
   fields.forEach((field) => {
     if (field.fieldType === FIELD_TYPE.DATE)
@@ -88,7 +105,11 @@ export const mapTextFields = (fields: FieldSchema[]) => {
   return textFields;
 };
 
-export const mapTextFieldsDetails = (fields: string[]) => {
+/**
+ * @param {string} fields - Fields for the Details view.
+ * @returns {string} - Template.
+ */
+export const mapTextFieldsDetails = (fields: string[]): string => {
   let textFields = '';
 
   fields.forEach((field) => {

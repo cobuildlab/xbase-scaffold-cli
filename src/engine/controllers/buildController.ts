@@ -7,7 +7,7 @@ import * as recursiveReadDir from 'recursive-readdir';
 import { ProjectController } from './projectController';
 import { getCompiler } from '../compilers';
 import { Context } from '../../common/context';
-import { Utils } from '../../common/utils';
+import { archiveToMemory } from '../../common/utils';
 
 const IGNORE_FILE_PATH = './.8baseignore';
 
@@ -23,7 +23,11 @@ const IGNORE_FILE_PATH = './.8baseignore';
  */
 
 export class BuildController {
-  public static clearBuild(context: Context) {
+  /**
+   * @param {Context} context - Context.
+   * @returns {void}
+   */
+  public static clearBuild(context: Context): void {
     fs.removeSync(context.config.buildRootDirPath);
   }
 
@@ -35,7 +39,13 @@ export class BuildController {
       4. Archive build and summary
   */
 
-  static async package(context: Context): Promise<{ build: Readable; meta: Readable }> {
+  /**
+   * @param {Context} context - Context.
+   * @returns {void}
+   */
+  static async package(
+    context: Context,
+  ): Promise<{ build: Readable; meta: Readable }> {
     BuildController.prepare(context);
 
     return {
@@ -45,6 +55,10 @@ export class BuildController {
   }
 
   // compile use only for invoke-local command
+  /**
+   * @param {Context} context - Context.
+   * @returns {{ compiledFiles: string[] }} - Compiled files.
+   */
   static async compile(context: Context): Promise<{ compiledFiles: string[] }> {
     BuildController.prepare(context);
 
@@ -62,9 +76,13 @@ export class BuildController {
   }
 
   /**
-   * Private functions
+   * Private functions.
    */
 
+  /**
+   * @param {Context} context - Context.
+   * @returns {Readable} - Readable.
+   */
   private static async packageSources(context: Context): Promise<Readable> {
     const excludedDirectories = ['.git', '.idea'];
 
@@ -77,22 +95,28 @@ export class BuildController {
     ];
 
     // have to add '/' at the beginning to ignore only root folder. avoid recursive
-    const ignoreFilter = ignore().add(excludedRoots.map(item => '/' + item));
+    const ignoreFilter = ignore().add(excludedRoots.map((item) => '/' + item));
 
     if (fs.existsSync(IGNORE_FILE_PATH)) {
       ignoreFilter.add(fs.readFileSync(IGNORE_FILE_PATH).toString());
     }
 
-    const files = await recursiveReadDir(context.config.rootExecutionDir, excludedDirectories);
+    const files = await recursiveReadDir(
+      context.config.rootExecutionDir,
+      excludedDirectories,
+    );
 
     const sourceToArchive = files
-      .map(file => path.relative(process.cwd(), file))
-      .filter(file => !ignoreFilter.ignores(file))
-      .map(file => ({ dist: file, source: file }));
+      .map((file) => path.relative(process.cwd(), file))
+      .filter((file) => !ignoreFilter.ignores(file))
+      .map((file) => ({ dist: file, source: file }));
 
-    return Utils.archiveToMemory(sourceToArchive, context);
+    return archiveToMemory(sourceToArchive, context);
   }
-
+  /**
+   * @param {Context} context - Context.
+   * @returns {Readable} - Readable.
+   */
   private static packageMetadata(context: Context): Promise<Readable> {
     const metaDir = context.config.metaDir;
 
@@ -100,10 +124,12 @@ export class BuildController {
     ProjectController.saveSchema(context.project, metaDir);
     ProjectController.saveProject(context.project, metaDir);
 
-    return Utils.archiveToMemory([{ source: metaDir }], context);
+    return archiveToMemory([{ source: metaDir }], context);
   }
-
-  private static prepare(context: Context) {
+  /**
+   * @param {Context} context - Context.
+   */
+  private static prepare(context: Context): void {
     fs.removeSync(context.config.buildRootDirPath);
 
     fs.mkdirpSync(context.config.buildDistPath);

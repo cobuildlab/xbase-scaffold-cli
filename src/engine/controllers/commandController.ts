@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import chalk from 'chalk';
 import errorCodes from '@8base/error-codes';
 import * as _ from 'lodash';
@@ -17,16 +18,28 @@ const NON_PROJECT_COMMANDS = [
   'environment list',
 ];
 
-const ERROR_CODES_TO_PRINT_MESSAGES = [errorCodes.BillingFeatureAccessErrorCode];
-
-const hasWorkspaceNotFoundError = (response: any) => {
+const ERROR_CODES_TO_PRINT_MESSAGES = [
+  errorCodes.BillingFeatureAccessErrorCode,
+];
+/**
+ * @param {any} response - Response.
+ * @returns {boolean} - Boolean.
+ */
+const hasWorkspaceNotFoundError = (response: any): boolean => {
   const errors = _.get(response, 'errors', []);
 
-  return _.some(errors, { code: errorCodes.EntityNotFoundErrorCode, details: { workspaceId: 'Workspace not found' } });
+  return _.some(errors, {
+    code: errorCodes.EntityNotFoundErrorCode,
+    details: { workspaceId: 'Workspace not found' },
+  });
 };
 
 export class CommandController {
-  static parseError = (error: any) => {
+  /**
+   * @param {any} error - Rrror.
+   * @returns {any} - Any.
+   */
+  static parseError = (error: any): any => {
     if (
       error.response &&
       error.response.errors &&
@@ -34,7 +47,7 @@ export class CommandController {
       error.response.errors[0].message
     ) {
       const internalError = error.response.errors[0];
-      if (ERROR_CODES_TO_PRINT_MESSAGES.some(m => m === internalError.code)) {
+      if (ERROR_CODES_TO_PRINT_MESSAGES.some((m) => m === internalError.code)) {
         return internalError.message;
       }
 
@@ -49,7 +62,11 @@ export class CommandController {
 
     return error.message;
   };
-
+  /**
+   * @param {Function} handler - Handler.
+   * @param {Translations} translations - Translations.
+   * @returns {any} - Any.
+   */
   static wrapHandler = (handler: Function, translations: Translations) => {
     return async (params: any) => {
       const command = params._[0];
@@ -59,7 +76,10 @@ export class CommandController {
       const start = Date.now();
 
       try {
-        if (NON_PROJECT_COMMANDS.indexOf(command) === -1 && NON_PROJECT_COMMANDS.indexOf(params._.join(' ')) === -1) {
+        if (
+          NON_PROJECT_COMMANDS.indexOf(command) === -1 &&
+          NON_PROJECT_COMMANDS.indexOf(params._.join(' ')) === -1
+        ) {
           if (!context.isProjectDir()) {
             throw new Error(translations.i18n.t('non_8base_project_dir'));
           }
@@ -72,9 +92,9 @@ export class CommandController {
         const time = Date.now() - start;
 
         context.logger.info(
-          `${chalk.hex(Colors.green)(command)} done. Time: ${chalk.hex(Colors.green)(
-            time.toLocaleString('en-US'),
-          )} sec.`,
+          `${chalk.hex(Colors.green)(command)} done. Time: ${chalk.hex(
+            Colors.green,
+          )(time.toLocaleString('en-US'))} sec.`,
         );
       } catch (ex) {
         context.spinner.stop();
@@ -87,7 +107,9 @@ export class CommandController {
 
         const time = Date.now() - start;
 
-        context.logger.error(`Time: ${chalk.hex(Colors.red)(time.toLocaleString('en-US'))} sec.`);
+        context.logger.error(
+          `Time: ${chalk.hex(Colors.red)(time.toLocaleString('en-US'))} sec.`,
+        );
 
         process.exit(1);
       }

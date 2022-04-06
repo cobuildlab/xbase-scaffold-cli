@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-namespace */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
@@ -53,11 +55,241 @@ type PluginGenerationOptions = {
   silent?: boolean;
 };
 
+type DeclarationType = {
+  type: ExtensionType;
+  handler: {
+    code: string;
+  };
+};
+
+/**
+ *
+ * @param context - Description.
+ * @param root0 - Description.
+ * @param root0.dirPath - Description.
+ * @param root0.templatePath - Description.
+ * @param root1 - Description.
+ * @param root1.syntax - Description.
+ * @param root1.silent - Description.
+ * @param root1.mocks - Description.
+ * @param options - Description.
+ */
+const processTemplate = (
+  context: Context,
+  { dirPath, templatePath }: { dirPath: string; templatePath: string },
+  { syntax, silent, mocks }: ProcessTemplateOptions,
+  options?: Record<string, any>,
+): void => {
+  mkdirp.sync(dirPath);
+
+  fs.readdirSync(templatePath).forEach((file) => {
+    if (file.indexOf('.') === -1) {
+      if (file !== 'mocks' || mocks) {
+        processTemplate(
+          context,
+          {
+            dirPath: path.join(dirPath, file),
+            templatePath: path.join(templatePath, file),
+          },
+          {
+            syntax,
+            silent,
+            mocks,
+          },
+          options,
+        );
+      }
+
+      return;
+    }
+
+    if (
+      new RegExp(
+        `.${syntax === SyntaxType.js ? SyntaxType.ts : SyntaxType.js}.ejs$`,
+      ).test(file)
+    ) {
+      return;
+    }
+
+    const data = fs.readFileSync(path.resolve(templatePath, file));
+
+    const content = ejs.compile(data.toString())({
+      ...options,
+      changeCase,
+    });
+
+    let fileName = file.replace(/\.ejs$/, '');
+
+    fileName = fileName.replace('mockName', _.get(options, 'mockName'));
+
+    fs.writeFileSync(path.resolve(dirPath, fileName), content);
+
+    if (!silent) {
+      context.logger.info(
+        context.i18n.t('project_created_file', {
+          path: path.join(dirPath, fileName),
+        }),
+      );
+    }
+  });
+};
+
+namespace TriggerUtils {
+  /**
+   *
+   * @param operation - Description.
+   * @param funcName - Description.
+   * @returns {TriggerOperation} - TriggerOperation.
+   */
+  export const resolveTriggerOperation = (
+    operation: string,
+    funcName: string,
+  ): TriggerOperation => {
+    const resolvedOperation = (TriggerOperation as any)[operation];
+    if (_.isNil(resolvedOperation)) {
+      throw new InvalidConfiguration(
+        StaticConfig.serviceConfigFileName,
+        'Invalid trigger operation ' + operation + ' in function ' + funcName,
+      );
+    }
+
+    return resolvedOperation as TriggerOperation;
+  };
+
+  /**
+   *
+   * @param type - "resolve", "trigger.before", "trigger.after", "subscription".
+   * @param functionName - Function name.
+   * @returns TriggerStageType.
+   */
+  export const resolveTriggerType = (
+    type: string,
+    functionName: string,
+  ): TriggerType => {
+    const triggerType = type.split('.')[1];
+    const resolvedType = (TriggerType as any)[triggerType];
+    if (_.isNil(resolvedType)) {
+      throw new InvalidConfiguration(
+        StaticConfig.serviceConfigFileName,
+        'Invalid trigger type ' + type + ' in function ' + functionName,
+      );
+    }
+
+    return resolvedType as TriggerType;
+  };
+}
+
+namespace FunctionUtils {
+  /**
+   * @param name - Name.
+   * @param handler - Handler.
+   * @returns {string} - String.
+   */
+  export const resolveHandler = (name: string, handler: any): string => {
+    if (_.isString(handler.code)) {
+      return handler.code;
+    }
+    throw new InvalidConfiguration(
+      StaticConfig.serviceConfigFileName,
+      'handler is invalid for function "' + name + '"',
+    );
+  };
+
+  /**
+   *
+   * @param func - Function.
+   * @param name - Name.
+   */
+  export const validateFunctionDefinition = (func: any, name: string): void => {
+    if (_.isNil(func.handler)) {
+      throw new InvalidConfiguration(
+        StaticConfig.serviceConfigFileName,
+        'handler is absent for function "' + name + '"',
+      );
+    }
+
+    if (
+      func.handler.code &&
+      !fs.existsSync(
+        path.join(StaticConfig.rootExecutionDir, func.handler.code),
+      )
+    ) {
+      throw new InvalidConfiguration(
+        StaticConfig.serviceConfigFileName,
+        'unable to determine function "' + name + '" source code',
+      );
+    }
+
+    if (
+      !StaticConfig.supportedCompileExtension.has(
+        path.extname(func.handler.code),
+      )
+    ) {
+      throw new InvalidConfiguration(
+        StaticConfig.serviceConfigFileName,
+        'function "' + name + '" have unsupported file extension',
+      );
+    }
+  };
+
+  /**
+   *
+   * @param type - "resolve", "trigger.before", "trigger.after", "subscription", "webhook".
+   * @param functionName - Function name.
+   * @returns FunctionType.
+   */
+  export const resolveFunctionType = (
+    type: string,
+    functionName: string,
+  ): ExtensionType => {
+    const funcType = type.split('.')[0];
+    const resolvedType = (ExtensionType as any)[funcType];
+    if (_.isNil(resolvedType)) {
+      throw new InvalidConfiguration(
+        StaticConfig.serviceConfigFileName,
+        'Invalid function type ' + type + ' in function ' + functionName,
+      );
+    }
+
+    return resolvedType as ExtensionType;
+  };
+}
+
+namespace ResolverUtils {
+  /**
+   * @param resolvers - Resolvers.
+   * @param {any} types - Types.
+   * @returns {ResolverDefinition[]} - Resolver Definition.
+   */
+  export const resolveGqlFunctionTypes = (
+    resolvers: ResolverDefinition[],
+    types: { [functionName: string]: GraphQLFunctionType },
+  ): ResolverDefinition[] => {
+    resolvers.forEach((func) => {
+      const type = types[func.name];
+      if (_.isNil(type)) {
+        throw new Error(
+          'Cannot define graphql type for function "' + func.name + '"',
+        );
+      }
+      func.gqlType = type;
+    });
+    return resolvers;
+  };
+}
+
+/**
+ * @param {FunctionGeneratationOptions} params - Params.
+ * @param {string} dirPath - DirPath.
+ * @param {FunctionDeclarationOptions} options - Options.
+ * @returns {DeclarationType} - Declaration.
+ */
 const generateFunctionDeclaration = (
-  { type, name, mocks, syntax }: FunctionGeneratationOptions,
+  params: FunctionGeneratationOptions,
   dirPath: string,
   options: FunctionDeclarationOptions,
-) => {
+): DeclarationType => {
+  const { type, syntax } = params;
   let declaration = {
     type,
     handler: {
@@ -90,9 +322,13 @@ const generateFunctionDeclaration = (
 
 export class ProjectController {
   /**
-   * public functions
+   * Public functions.
    */
 
+  /**
+   * @param {Context} context - Context.
+   * @returns {ProjectDefinition} - ProjectDefinition.
+   */
   static initialize(context: Context): ProjectDefinition {
     const name = path.basename(context.config.rootExecutionDir);
     context.logger.debug('start initialize project "' + name + '"');
@@ -103,13 +339,22 @@ export class ProjectController {
     context.logger.debug('load extensions');
     const extensions = ProjectController.loadExtensions(config);
 
-    const gqlSchema = GraphqlController.loadSchema(ProjectController.getSchemaPaths(extensions));
+    const gqlSchema = GraphqlController.loadSchema(
+      ProjectController.getSchemaPaths(extensions),
+    );
 
-    context.logger.debug('load functions count = ' + extensions.functions.length);
+    context.logger.debug(
+      'load functions count = ' + extensions.functions.length,
+    );
 
     context.logger.debug('resolve function graphql types');
-    const functionGqlTypes = GraphqlController.defineGqlFunctionsType(gqlSchema);
-    extensions.resolvers = ResolverUtils.resolveGqlFunctionTypes(extensions.resolvers, functionGqlTypes);
+    const functionGqlTypes = GraphqlController.defineGqlFunctionsType(
+      gqlSchema,
+    );
+    extensions.resolvers = ResolverUtils.resolveGqlFunctionTypes(
+      extensions.resolvers,
+      functionGqlTypes,
+    );
 
     context.logger.debug('initialize project complete');
     return {
@@ -119,40 +364,61 @@ export class ProjectController {
     };
   }
 
+  /**
+   * @param { Context} context - Context.
+   * @returns {string[]} - String.
+   */
   static getFunctionSourceCode(context: Context): string[] {
-    return _.map(context.project.extensions.functions, f =>
+    return _.map(context.project.extensions.functions, (f) =>
       path.join(context.config.rootExecutionDir, f.pathToFunction),
     );
   }
 
-  static saveSchema(project: ProjectDefinition, outDir: string) {
+  /**
+   * @param {ProjectDefinition} project - Project.
+   * @param {string} outDir - OutDir.
+   */
+  static saveSchema(project: ProjectDefinition, outDir: string): void {
     const graphqlFilePath = path.join(outDir, 'schema.graphql');
     fs.writeFileSync(graphqlFilePath, project.gqlSchema);
   }
 
-  static saveProject(project: ProjectDefinition, outDir: string) {
+  /**
+   * @param {ProjectDefinition} project - Project.
+   * @param {string} outDir - OutDir.
+   * @returns {void}
+   */
+  static saveProject(project: ProjectDefinition, outDir: string): void {
     const projectObject = {
       name: project.name,
       functions: project.extensions.functions,
     };
 
     const projectFilePath = path.join(outDir, 'project.json');
-    return fs.writeFileSync(projectFilePath, JSON.stringify(projectObject, null, 2));
+    return fs.writeFileSync(
+      projectFilePath,
+      JSON.stringify(projectObject, null, 2),
+    );
   }
 
-  static saveMetaDataFile(project: ProjectDefinition, outDir: string) {
+  /**
+   * @param {ProjectDefinition} project - Project.
+   * @param {string} outDir - OutDir.
+   * @returns {void}
+   */
+  static saveMetaDataFile(project: ProjectDefinition, outDir: string): void {
     const summaryFile = path.join(outDir, '__summary__functions.json');
     fs.writeFileSync(
       summaryFile,
       JSON.stringify(
         {
-          functions: project.extensions.functions.map(f => {
+          functions: project.extensions.functions.map((f) => {
             return {
               name: f.name,
               handler: f.handler,
             };
           }),
-          resolvers: project.extensions.resolvers.map(r => {
+          resolvers: project.extensions.resolvers.map((r) => {
             return {
               name: r.name,
               functionName: r.functionName,
@@ -168,8 +434,12 @@ export class ProjectController {
     );
   }
 
+  /**
+   * @param {ExtensionsContainer} extensions - Extensions.
+   * @returns {string[]} - Schema paths.
+   */
   static getSchemaPaths(extensions: ExtensionsContainer): string[] {
-    return _.map(extensions.resolvers, f => {
+    return _.map(extensions.resolvers, (f) => {
       const p = path.join(StaticConfig.rootExecutionDir, f.gqlSchemaPath);
       if (!fs.existsSync(p)) {
         throw new Error('schema path "' + p + '" not present');
@@ -179,11 +449,18 @@ export class ProjectController {
   }
 
   /**
-   * private functions
+   * Private functions.
    */
 
+  /**
+   * @param {Context} context - Context.
+   * @param {string} projectPath - String.
+   * @returns {any} - Any.
+   */
   private static loadConfigFile(context: Context, projectPath?: string): any {
-    const pathToYmlConfig = projectPath ? path.join(projectPath, '8base.yml') : StaticConfig.serviceConfigFileName;
+    const pathToYmlConfig = projectPath
+      ? path.join(projectPath, '8base.yml')
+      : StaticConfig.serviceConfigFileName;
 
     context.logger.debug('check exist yaml file = ' + pathToYmlConfig);
 
@@ -194,12 +471,28 @@ export class ProjectController {
     try {
       return yaml.safeLoad(fs.readFileSync(pathToYmlConfig, 'utf8'));
     } catch (ex) {
-      throw new InvalidConfiguration(StaticConfig.serviceConfigFileName, ex.message);
+      throw new InvalidConfiguration(
+        StaticConfig.serviceConfigFileName,
+        ex.message,
+      );
     }
   }
 
-  private static saveConfigFile(context: Context, config: Object, projectPath?: string, silent?: boolean): any {
-    const pathToYmlConfig = projectPath ? path.join(projectPath, '8base.yml') : StaticConfig.serviceConfigFileName;
+  /**
+   * @param {Context} context - Context.
+   * @param {Record<string, any>} config - Config.
+   * @param {string} projectPath - ProjectPath.
+   * @param {string} silent - Silent.
+   */
+  private static saveConfigFile(
+    context: Context,
+    config: Record<string, any>,
+    projectPath?: string,
+    silent?: boolean,
+  ): any {
+    const pathToYmlConfig = projectPath
+      ? path.join(projectPath, '8base.yml')
+      : StaticConfig.serviceConfigFileName;
 
     fs.writeFileSync(pathToYmlConfig, yaml.safeDump(config));
 
@@ -212,6 +505,10 @@ export class ProjectController {
     }
   }
 
+  /**
+   * @param {any} config - Config.
+   * @returns {ExtensionsContainer} - ExtensionsContainer.
+   */
   private static loadExtensions(config: any): ExtensionsContainer {
     return _.reduce<any, ExtensionsContainer>(
       config.functions,
@@ -222,7 +519,10 @@ export class ProjectController {
           name: functionName,
           // TODO: create class FunctionDefinition
           handler: functionName + '.handler', // this handler generate in compile step
-          pathToFunction: FunctionUtils.resolveHandler(functionName, data.handler),
+          pathToFunction: FunctionUtils.resolveHandler(
+            functionName,
+            data.handler,
+          ),
         });
 
         switch (FunctionUtils.resolveFunctionType(data.type, functionName)) {
@@ -250,12 +550,15 @@ export class ProjectController {
               );
             }
 
-            const operation = data.operation.split('.'); // TableName.TriggerType
+            // const operation = data.operation.split('.'); // TableName.TriggerType
 
             extensions.triggers.push({
               name: functionName,
-              operation: TriggerUtils.resolveTriggerOperation(operation[1], functionName),
-              tableName: operation[0],
+              operation: TriggerUtils.resolveTriggerOperation(
+                data.operation.split('.')[1],
+                functionName,
+              ),
+              tableName: data.operation.split('.')[0],
               functionName,
               type: TriggerUtils.resolveTriggerType(data.type, functionName),
             });
@@ -265,7 +568,9 @@ export class ProjectController {
             if (!data.method) {
               throw new InvalidConfiguration(
                 StaticConfig.serviceConfigFileName,
-                "Parameter 'method' is missing in webhook '" + functionName + "'",
+                'Parameter \'method\' is missing in webhook \'' +
+                  functionName +
+                  '\'',
               );
             }
 
@@ -302,19 +607,28 @@ export class ProjectController {
     );
   }
 
+  /**
+   * @param {Context} context - Context.
+   * @param {string} name - Name.
+   * @param {Record<string, any>} declaration - Declaration.
+   * @param {string} projectPath - ProjectPath.
+   * @param {string} silent - Silent.
+   */
   static addPluginDeclaration(
     context: Context,
     name: string,
-    declaration: Object,
+    declaration: Record<string, any>,
     projectPath?: string,
     silent?: boolean,
-  ) {
-    let config = ProjectController.loadConfigFile(context, projectPath);
+  ): void {
+    const config = ProjectController.loadConfigFile(context, projectPath);
 
     const plugins = config.plugins || [];
 
     if (_.some(plugins, { name })) {
-      throw new Error(context.i18n.t('plugins_with_name_already_defined', { name }));
+      throw new Error(
+        context.i18n.t('plugins_with_name_already_defined', { name }),
+      );
     }
 
     config.plugins = [...plugins, declaration];
@@ -322,19 +636,28 @@ export class ProjectController {
     ProjectController.saveConfigFile(context, config, projectPath, silent);
   }
 
+  /**
+   * @param {Context} context - Context.
+   * @param {string} name - Name.
+   * @param {Record<string, any>} declaration - Declaration.
+   * @param {string} projectPath - ProjectPath.
+   * @param {string} silent - Silent.
+   */
   static addFunctionDeclaration(
     context: Context,
     name: string,
-    declaration: Object,
+    declaration: Record<string, any>,
     projectPath?: string,
     silent?: boolean,
-  ) {
+  ): void {
     let config = ProjectController.loadConfigFile(context, projectPath) || {
       functions: {},
     };
 
     if (_.has(config, ['functions', name])) {
-      throw new Error(context.i18n.t('function_with_name_already_defined', { name }));
+      throw new Error(
+        context.i18n.t('function_with_name_already_defined', { name }),
+      );
     }
 
     config = _.set(config, ['functions', name], declaration);
@@ -342,22 +665,50 @@ export class ProjectController {
     ProjectController.saveConfigFile(context, config, projectPath, silent);
   }
 
+  /**
+   *
+   * @param {Context} context - Context.
+   * @param {} root0 - Root.
+   * @param {} root0.type - Type.
+   * @param {} root0.name - Name.
+   * @param {} root0.mocks - Mocks.
+   * @param {} root0.syntax - Syntax.
+   * @param {} root0.extendType - Extendtype.
+   * @param {} root0.projectPath - ProjectPath.
+   * @param {} root0.silent - Silent.
+   * @param {} options - Options.
+   */
   static generateFunction(
     context: Context,
-    { type, name, mocks, syntax, extendType = 'Query', projectPath = '.', silent }: FunctionGeneratationOptions,
+    {
+      type,
+      name,
+      mocks,
+      syntax,
+      extendType = 'Query',
+      projectPath = '.',
+      silent,
+    }: FunctionGeneratationOptions,
     options: FunctionDeclarationOptions = {},
-  ) {
+  ): void {
     const dirPath = `src/${type}s/${name}`;
 
     ProjectController.addFunctionDeclaration(
       context,
       name,
-      generateFunctionDeclaration({ type, name, syntax, mocks }, dirPath, options),
+      generateFunctionDeclaration(
+        { type, name, syntax, mocks },
+        dirPath,
+        options,
+      ),
       projectPath,
       silent,
     );
 
-    const functionTemplatePath = path.resolve(context.config.functionTemplatesPath, type);
+    const functionTemplatePath = path.resolve(
+      context.config.functionTemplatesPath,
+      type,
+    );
 
     processTemplate(
       context,
@@ -380,13 +731,32 @@ export class ProjectController {
     }
   }
 
-  static generatePlugin(context: Context, { name, syntax, silent, projectPath = '.' }: PluginGenerationOptions) {
+  /**
+   * @param {Context} context - Context.
+   * @param root0 - Description.
+   * @param root0.name - Description.
+   * @param root0.syntax - Description.
+   * @param root0.silent - Description.
+   * @param root0.projectPath - Description.
+   */
+  static generatePlugin(
+    context: Context,
+    { name, syntax, silent, projectPath = '.' }: PluginGenerationOptions,
+  ): void {
     const functionName = `${name}Resolver`;
     const extendType = _.upperFirst(`${name}Mutation`);
     const pluginPath = path.join('plugins', name);
-    const functionPath = path.join(pluginPath, 'src', 'resolvers', functionName);
+    const functionPath = path.join(
+      pluginPath,
+      'src',
+      'resolvers',
+      functionName,
+    );
     const pluginTemplatePath = context.config.pluginTemplatePath;
-    const resolverTemplatePath = path.resolve(context.config.functionTemplatesPath, ExtensionType.resolver);
+    const resolverTemplatePath = path.resolve(
+      context.config.functionTemplatesPath,
+      ExtensionType.resolver,
+    );
 
     ProjectController.addPluginDeclaration(
       context,
@@ -430,33 +800,71 @@ export class ProjectController {
     }
   }
 
-  static getMock(context: Context, functionName: string, mockName: string) {
-    let config = ProjectController.loadConfigFile(context, '.') || {
+  /**
+   *
+   * @param context - Description.
+   * @param functionName - Description.
+   * @param mockName - Description.
+   * @returns {string} - Description.
+   */
+  static getMock(
+    context: Context,
+    functionName: string,
+    mockName: string,
+  ): string {
+    const config = ProjectController.loadConfigFile(context, '.') || {
       functions: {},
     };
 
     if (!_.has(config, ['functions', functionName])) {
-      throw new Error(context.i18n.t('function_with_name_not_defined', { name: functionName }));
+      throw new Error(
+        context.i18n.t('function_with_name_not_defined', {
+          name: functionName,
+        }),
+      );
     }
 
-    const type = _.get(config, ['functions', functionName]).type.match(/^\w+/)[0];
+    const type = _.get(config, ['functions', functionName]).type.match(
+      /^\w+/,
+    )[0];
 
     const mockPath = `src/${type}s/${functionName}/mocks/${mockName}.json`;
 
     if (!fs.existsSync(mockPath)) {
-      throw new Error(context.i18n.t('mock_with_name_not_defined', { functionName, mockName }));
+      throw new Error(
+        context.i18n.t('mock_with_name_not_defined', {
+          functionName,
+          mockName,
+        }),
+      );
     }
 
     return fs.readFileSync(mockPath).toString();
   }
 
-  static generateMock(context: Context, { name, functionName, projectPath = '.', silent }: MockGeneratationOptions) {
-    let config = ProjectController.loadConfigFile(context, projectPath) || {
+  /**
+   *
+   * @param context - Context.
+   * @param root0 - Description.
+   * @param root0.name - Description.
+   * @param root0.functionName - Description.
+   * @param root0.projectPath - Description.
+   * @param root0.silent - Description.
+   */
+  static generateMock(
+    context: Context,
+    { name, functionName, projectPath = '.', silent }: MockGeneratationOptions,
+  ): void {
+    const config = ProjectController.loadConfigFile(context, projectPath) || {
       functions: {},
     };
 
     if (!_.has(config, ['functions', functionName])) {
-      throw new Error(context.i18n.t('function_with_name_not_defined', { name: functionName }));
+      throw new Error(
+        context.i18n.t('function_with_name_not_defined', {
+          name: functionName,
+        }),
+      );
     }
 
     const fn = _.get(config, ['functions', functionName]);
@@ -503,165 +911,3 @@ type ProcessTemplateOptions = {
   silent?: boolean;
   mocks?: boolean;
 };
-
-const processTemplate = (
-  context: Context,
-  { dirPath, templatePath }: { dirPath: string; templatePath: string },
-  { syntax, silent, mocks }: ProcessTemplateOptions,
-  options?: Object,
-) => {
-  mkdirp.sync(dirPath);
-
-  fs.readdirSync(templatePath).forEach(file => {
-    if (file.indexOf('.') === -1) {
-      if (file !== 'mocks' || mocks) {
-        processTemplate(
-          context,
-          {
-            dirPath: path.join(dirPath, file),
-            templatePath: path.join(templatePath, file),
-          },
-          {
-            syntax,
-            silent,
-            mocks,
-          },
-          options,
-        );
-      }
-
-      return;
-    }
-
-    if (new RegExp(`.${syntax === SyntaxType.js ? SyntaxType.ts : SyntaxType.js}.ejs$`).test(file)) {
-      return;
-    }
-
-    const data = fs.readFileSync(path.resolve(templatePath, file));
-
-    const content = ejs.compile(data.toString())({
-      ...options,
-      changeCase,
-    });
-
-    let fileName = file.replace(/\.ejs$/, '');
-
-    fileName = fileName.replace('mockName', _.get(options, 'mockName'));
-
-    fs.writeFileSync(path.resolve(dirPath, fileName), content);
-
-    if (!silent) {
-      context.logger.info(
-        context.i18n.t('project_created_file', {
-          path: path.join(dirPath, fileName),
-        }),
-      );
-    }
-  });
-};
-
-namespace ResolverUtils {
-  /**
-   * @argument types project, { functionName: type }
-   * Function resolve graphql type for each function.
-   * we have to know function type (mutation, query) for compile schema on the server side
-   */
-  export function resolveGqlFunctionTypes(
-    resolvers: ResolverDefinition[],
-    types: { [functionName: string]: GraphQLFunctionType },
-  ): ResolverDefinition[] {
-    resolvers.forEach(func => {
-      const type = types[func.name];
-      if (_.isNil(type)) {
-        throw new Error('Cannot define graphql type for function "' + func.name + '"');
-      }
-      func.gqlType = type;
-    });
-    return resolvers;
-  }
-}
-
-namespace FunctionUtils {
-  export function resolveHandler(name: string, handler: any): string {
-    if (_.isString(handler.code)) {
-      return handler.code;
-    }
-    throw new InvalidConfiguration(
-      StaticConfig.serviceConfigFileName,
-      'handler is invalid for function "' + name + '"',
-    );
-  }
-
-  export function validateFunctionDefinition(func: any, name: string) {
-    if (_.isNil(func.handler)) {
-      throw new InvalidConfiguration(
-        StaticConfig.serviceConfigFileName,
-        'handler is absent for function "' + name + '"',
-      );
-    }
-
-    if (func.handler.code && !fs.existsSync(path.join(StaticConfig.rootExecutionDir, func.handler.code))) {
-      throw new InvalidConfiguration(
-        StaticConfig.serviceConfigFileName,
-        'unable to determine function "' + name + '" source code',
-      );
-    }
-
-    if (!StaticConfig.supportedCompileExtension.has(path.extname(func.handler.code))) {
-      throw new InvalidConfiguration(
-        StaticConfig.serviceConfigFileName,
-        'function "' + name + '" have unsupported file extension',
-      );
-    }
-  }
-
-  /**
-   *
-   * @param type "resolve", "trigger.before", "trigger.after", "subscription", "webhook"
-   * @return FunctionType
-   */
-  export function resolveFunctionType(type: string, functionName: string): ExtensionType {
-    const funcType = type.split('.')[0];
-    const resolvedType = (<any>ExtensionType)[funcType];
-    if (_.isNil(resolvedType)) {
-      throw new InvalidConfiguration(
-        StaticConfig.serviceConfigFileName,
-        'Invalid function type ' + type + ' in function ' + functionName,
-      );
-    }
-
-    return <ExtensionType>resolvedType;
-  }
-}
-
-namespace TriggerUtils {
-  export function resolveTriggerOperation(operation: string, funcName: string): TriggerOperation {
-    const resolvedOperation = (<any>TriggerOperation)[operation];
-    if (_.isNil(resolvedOperation)) {
-      throw new InvalidConfiguration(
-        StaticConfig.serviceConfigFileName,
-        'Invalid trigger operation ' + operation + ' in function ' + funcName,
-      );
-    }
-
-    return <TriggerOperation>resolvedOperation;
-  }
-
-  /**
-   *
-   * @param type "resolve", "trigger.before", "trigger.after", "subscription"
-   * @return TriggerStageType
-   */
-  export function resolveTriggerType(type: string, functionName: string): TriggerType {
-    const triggerType = type.split('.')[1];
-    const resolvedType = (<any>TriggerType)[triggerType];
-    if (_.isNil(resolvedType)) {
-      throw new InvalidConfiguration(
-        StaticConfig.serviceConfigFileName,
-        'Invalid trigger type ' + type + ' in function ' + functionName,
-      );
-    }
-
-    return <TriggerType>resolvedType;
-  }
-}

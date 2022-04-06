@@ -1,8 +1,14 @@
+/**
+ * @param {string} moduleName - Module name for the file and title.
+ * @param {string} titleRows - Titles for the table.
+ * @param {string} rows - Rows for every title.
+ * @returns {string} - Template.
+ */
 export const buildTemplateMainView = (
   moduleName: string,
   titleRows: string,
   rows: string,
-) => {
+): string => {
   return `
         import {
           Button,

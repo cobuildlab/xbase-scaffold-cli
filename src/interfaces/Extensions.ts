@@ -45,7 +45,7 @@ export interface ResolverDefinition extends BaseDefinition {
   gqlSchemaPath: string;
 }
 
-export interface TaskDefinition extends BaseDefinition {}
+export type TaskDefinition = BaseDefinition
 
 export interface ScheduleDefinition extends BaseDefinition {
   scheduleExpression: string;
