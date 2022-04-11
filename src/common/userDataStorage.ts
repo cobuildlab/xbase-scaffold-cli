@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { StaticConfig } from '../config';
-import {
-  StorageParameters,
-  StorageParametersType,
-} from '../consts/StorageParameters';
+import { StorageParameters, StorageParametersType } from '../consts/StorageParameters';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -44,10 +41,7 @@ class Storage {
     return JSON.parse(fs.readFileSync(this.pathToStorage).toString());
   }
 
-  /**
-   * @returns {any} - Any.
-   */
-  static getStorage(): Array<any> {
+  static getStorage(): any {
     this.checkStorageExist();
     return this.parseStorageData();
   }
@@ -71,24 +65,17 @@ class Storage {
 
 export class UserDataStorage {
   /**
-   * @param {{ name: string; value: any }[]} data - Data.
-   * @returns {void}
+   * @param data - Data.
    */
   static setValues(data: { name: string; value: any }[]): void {
     const storage = Storage.getStorage();
-    console.log(data);
-    //data.map((d) => (storage[d.name] = d.value));
+    data.map((d) => (storage[d.name] = d.value));
     Storage.saveStorage(storage);
   }
 
-  /**
-   * @param {StorageParametersType} name - Name.
-   * @returns {any} - Any.
-   */
   static getValue(name: StorageParametersType): any {
     const storage = Storage.getStorage();
-    // const storageValue = storage[name];
-    const storageValue = storage[Number(name)];
+    const storageValue = storage[name];
 
     if (!storageValue && !!defaultStorageData[name]) {
       this.setValues([
@@ -111,16 +98,13 @@ export class UserDataStorage {
    */
   static clearAll(): void {
     const storage = Storage.getStorage();
-    /* delete storage.auth;
+    delete storage.auth;
     delete storage.email;
     delete storage.accountId;
-    delete storage.remoteCliEndpoint; */
+    delete storage.remoteCliEndpoint;
     Storage.saveStorage(storage);
   }
 
-  /**
-   * @returns {string} - String.
-   */
   static toString(): string {
     return Storage.toPrettyString(Storage.getStorage());
   }
